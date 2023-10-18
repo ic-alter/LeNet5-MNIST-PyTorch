@@ -4,9 +4,11 @@ import numpy as np
 import os
 import datetime
 import torch
+import cv2
 from torch.nn import CrossEntropyLoss
 from torch.optim import SGD
 from torch.utils.data import DataLoader
+from torchvision.transforms import ToTensor
 
 class PhotoModel(object):
     def __init__(self) -> None:
@@ -19,7 +21,7 @@ class PhotoModel(object):
         for i in range(2,13):
             self.full_dataset += MyDataset('train_data/train',str(i))
 
-    def train(self):
+    def train(self,generation = 100):
         # 划分训练集测试集
         train_size = int(0.8 * len(self.full_dataset))
         test_size = len(self.full_dataset) - train_size
@@ -32,7 +34,6 @@ class PhotoModel(object):
         # 交叉熵
         loss_fn = CrossEntropyLoss()
         # 训练100代
-        generation = 100
         for i in range(generation):
             self.model.train()
             for idx, (train_x, train_label) in enumerate(train_loader):
@@ -61,6 +62,15 @@ class PhotoModel(object):
         self.right_rate = all_correct_num / all_sample_num
         print('准确率: {}'.format(self.right_rate), flush=True)
 
+    def predict(self, pred_loader):
+        self.model.eval()
+        for idx, (test_x, test_label) in enumerate(pred_loader):
+            test_x = test_x.to(self.device)
+            test_label = test_label.to(self.device)
+            predict_y = self.model(test_x.float()).detach()
+            predict_y =torch.argmax(predict_y, dim=-1)
+            print(predict_y)
+
     def save_model(self):
         t = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         filename = 'models/{}.{}.pt'.format(t, self.right_rate)
@@ -80,15 +90,24 @@ class PhotoModel(object):
 def train_new():
     pm = PhotoModel()
     pm.load_data()
-    pm.train()
+    pm.train(100)
     pm.save_model()
 
 def show():
     pm = PhotoModel()
     pm.load_data()
-    pm.load_model('models/2023-10-17-16-01-02.0.8823924731182796.pt')
+    pm.load_model('models/2023-10-18-13-43-03.0.9670698924731183.pt')
     pm.show()
 
+def predict():
+    pm = PhotoModel()
+    pm.load_model('models/2023-10-18-13-43-03.0.9670698924731183.pt')
+    dataset = MyDataset('train_data/train','10')
+    pred_loader = DataLoader(dataset, batch_size=256)
+    print(pm.predict(pred_loader))
+
+
 if __name__ == '__main__':
-    train_new()
-    #show()
+    #train_new()
+    show()
+    predict()
