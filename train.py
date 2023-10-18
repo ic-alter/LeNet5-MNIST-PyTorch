@@ -44,7 +44,7 @@ class PhotoModel(object):
                 loss = loss_fn(predict_y, train_label.long())
                 loss.backward()
                 sgd.step()
-                # 输出本轮的准确率
+            # 输出本轮的准确率
             self.test(test_loader)
 
     def test(self, test_loader):
