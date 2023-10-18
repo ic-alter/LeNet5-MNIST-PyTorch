@@ -32,5 +32,5 @@ class Lenet5(Module):
         y = self.fc2(y)
         y = self.relu4(y)
         y = self.fc3(y)
-        y = self.relu5(y)
+        #y = self.relu5(y)
         return y
